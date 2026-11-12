@@ -1,0 +1,6 @@
+{
+  "name": "Lumina Invoice",
+  "description": "A smart, aesthetic invoice generator for freelancers and small businesses. Features AI-powered line item expansion and financial insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

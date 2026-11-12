@@ -1,0 +1,76 @@
+/* Global & Print Page-Break Styles */
+.avoid-break,
+.item-row,
+tr {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  break-inside: avoid-page !important;
+}
+
+thead {
+  display: table-header-group !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+tbody {
+  display: table-row-group !important;
+}
+
+.page-break-before {
+  page-break-before: always !important;
+  break-before: page !important;
+}
+
+.page-break-after {
+  page-break-after: always !important;
+  break-after: page !important;
+}
+
+.bank-details-block,
+.summary-totals-block,
+.invoice-header-block,
+.bill-to-block,
+.notes-block,
+.summary-and-details-section,
+.footer-watermark-block {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  break-inside: avoid-page !important;
+}
+
+/* Print Specific Rules */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 12mm 12mm 12mm;
+  }
+
+  body, html, #root {
+    background-color: white !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  #invoice-capture-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumina Invoice</title>
+    <meta name="description" content="A smart, aesthetic invoice generator for freelancers and small businesses. Features AI-powered line item expansion and financial insights." />
+    <meta property="og:title" content="Lumina Invoice" />
+    <meta property="og:description" content="A smart, aesthetic invoice generator for freelancers and small businesses. Features AI-powered line item expansion and financial insights." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .avoid-break,
+      .item-row,
+      tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        break-inside: avoid-page !important;
+      }
+      thead {
+        display: table-header-group !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      tbody {
+        display: table-row-group !important;
+      }
+      .bank-details-block,
+      .summary-totals-block,
+      .invoice-header-block,
+      .bill-to-block,
+      .notes-block,
+      .footer-watermark-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        break-inside: avoid-page !important;
+      }
+      @media print {
+        @page {
+          margin: 12mm 12mm 12mm 12mm;
+          size: A4 portrait;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .print-only {
+          display: block !important;
+        }
+        body, html, #root {
+          background-color: white !important;
+          width: 100% !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        #invoice-capture-area {
+          box-shadow: none !important;
+          transform: none !important;
+          max-width: 100% !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-slate-50 text-slate-900 antialiased">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Authenticated user account metadata.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 255
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "authProvider": {
+          "type": "string",
+          "enum": ["google", "password"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "BusinessProfile": {
+      "title": "BusinessProfile",
+      "description": "Business branding, tax rules, currency, and bank account settings for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "website": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "logoUrl": {
+          "type": "string",
+          "maxLength": 600000
+        },
+        "primaryColor": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "templateId": {
+          "type": "string",
+          "enum": ["clean", "bold", "sidebar"]
+        },
+        "country": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "currency": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "logoShape": {
+          "type": "string",
+          "enum": ["square", "circle", "triangle"]
+        },
+        "taxes": {
+          "type": "array",
+          "description": "Bounded list of up to 20 tax configurations."
+        },
+        "bankAccounts": {
+          "type": "array",
+          "description": "Bounded list of up to 20 bank accounts."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "name", "currency", "templateId", "primaryColor", "taxes", "bankAccounts", "createdAt", "updatedAt"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Customer invoice with bounded line items and payment tracking.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "number": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "dueDate": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "paymentTerms": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "clientName": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "clientEmail": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "clientPhone": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "clientAddress": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "sent", "paid"]
+        },
+        "total": {
+          "type": "number"
+        },
+        "amountPaid": {
+          "type": "number"
+        },
+        "outstandingBalance": {
+          "type": "number"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "appliedTaxId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "taxTotal": {
+          "type": "number"
+        },
+        "items": {
+          "type": "array",
+          "description": "Bounded list of up to 100 invoice line items."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "number", "date", "status", "total", "items", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Reusable inventory product or service item.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "price": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "name", "price", "createdAt", "updatedAt"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Saved client contact record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "name", "email", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "User account root document."
+    },
+    "/users/{userId}/profile/{profileId}": {
+      "schema": { "$ref": "#/entities/BusinessProfile" },
+      "description": "Business profile document owned by the user."
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Invoices owned by the user."
+    },
+    "/users/{userId}/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Inventory products/services owned by the user."
+    },
+    "/users/{userId}/clients/{clientId}": {
+      "schema": { "$ref": "#/entities/Client" },
+      "description": "Saved client contacts owned by the user."
+    }
+  }
+}

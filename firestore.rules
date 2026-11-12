@@ -1,0 +1,309 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function parentUserExists(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    // Entity validators
+    function isValidUserAccount(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'authProvider', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.email is string
+        && data.email.size() >= 1
+        && data.email.size() <= 255
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150))
+        && (!('authProvider' in data) || data.authProvider in ['google', 'password'])
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBusinessProfile(data, userId) {
+      return data.keys().hasAll(['userId', 'name', 'currency', 'templateId', 'primaryColor', 'taxes', 'bankAccounts', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'userId', 'name', 'email', 'address', 'phone', 'website', 'logoUrl',
+          'primaryColor', 'templateId', 'country', 'state', 'currency',
+          'logoShape', 'taxes', 'bankAccounts', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 200
+        && (!('email' in data) || (data.email is string && data.email.size() <= 255))
+        && (!('address' in data) || (data.address is string && data.address.size() <= 1000))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 60))
+        && (!('website' in data) || (data.website is string && data.website.size() <= 255))
+        && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 600000))
+        && data.primaryColor is string
+        && data.primaryColor.size() <= 32
+        && data.templateId in ['clean', 'bold', 'sidebar']
+        && (!('country' in data) || (data.country is string && data.country.size() <= 100))
+        && (!('state' in data) || (data.state is string && data.state.size() <= 100))
+        && data.currency is string
+        && data.currency.size() >= 1
+        && data.currency.size() <= 10
+        && (!('logoShape' in data) || data.logoShape in ['square', 'circle', 'triangle'])
+        && data.taxes is list
+        && data.taxes.size() <= 20
+        && (data.taxes.size() == 0 || data.taxes[0] is map)
+        && data.bankAccounts is list
+        && data.bankAccounts.size() <= 20
+        && (data.bankAccounts.size() == 0 || data.bankAccounts[0] is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidInvoice(data, userId, invoiceId) {
+      return data.keys().hasAll(['id', 'userId', 'number', 'date', 'status', 'total', 'items', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'id', 'userId', 'number', 'date', 'dueDate', 'paymentTerms',
+          'clientName', 'clientEmail', 'clientPhone', 'clientAddress',
+          'status', 'total', 'amountPaid', 'outstandingBalance',
+          'notes', 'appliedTaxId', 'taxTotal', 'items', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string
+        && data.id == invoiceId
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.number is string
+        && data.number.size() >= 1
+        && data.number.size() <= 64
+        && data.date is string
+        && data.date.size() <= 32
+        && (!('dueDate' in data) || (data.dueDate is string && data.dueDate.size() <= 32))
+        && (!('paymentTerms' in data) || (data.paymentTerms is string && data.paymentTerms.size() <= 64))
+        && (!('clientName' in data) || (data.clientName is string && data.clientName.size() <= 200))
+        && (!('clientEmail' in data) || (data.clientEmail is string && data.clientEmail.size() <= 255))
+        && (!('clientPhone' in data) || (data.clientPhone is string && data.clientPhone.size() <= 60))
+        && (!('clientAddress' in data) || (data.clientAddress is string && data.clientAddress.size() <= 1000))
+        && data.status in ['draft', 'sent', 'paid']
+        && data.total is number
+        && data.total >= 0
+        && (!('amountPaid' in data) || (data.amountPaid is number && data.amountPaid >= 0))
+        && (!('outstandingBalance' in data) || (data.outstandingBalance is number && data.outstandingBalance >= 0))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000))
+        && (!('appliedTaxId' in data) || (data.appliedTaxId is string && data.appliedTaxId.size() <= 128))
+        && (!('taxTotal' in data) || (data.taxTotal is number && data.taxTotal >= 0))
+        && data.items is list
+        && data.items.size() <= 100
+        && (data.items.size() == 0 || data.items[0] is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProduct(data, userId, productId) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'price', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'userId', 'name', 'price', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.id == productId
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 200
+        && data.price is number
+        && data.price >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidClient(data, userId, clientId) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'userId', 'name', 'email', 'phone', 'address', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.id == clientId
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 200
+        && data.email is string
+        && data.email.size() >= 1
+        && data.email.size() <= 255
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 60))
+        && (!('address' in data) || (data.address is string && data.address.size() <= 1000))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Users root document (PII isolated to owner only)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'displayName', 'authProvider', 'updatedAt']);
+      allow delete: if false;
+
+      // Business Profile
+      match /profile/{profileId} {
+        allow get: if isValidId(userId) && isValidId(profileId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(profileId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidBusinessProfile(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isValidId(userId)
+          && isValidId(profileId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidBusinessProfile(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'email', 'address', 'phone', 'website', 'logoUrl',
+            'primaryColor', 'templateId', 'country', 'state', 'currency',
+            'logoShape', 'taxes', 'bankAccounts', 'updatedAt'
+          ])
+          && parentUserExists(userId);
+        allow delete: if isValidId(userId) && isValidId(profileId) && isVerifiedUser() && isOwner(userId);
+      }
+
+      // Invoices
+      match /invoices/{invoiceId} {
+        allow get: if isValidId(userId) && isValidId(invoiceId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(invoiceId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidInvoice(incoming(), userId, invoiceId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isValidId(userId)
+          && isValidId(invoiceId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && existing().status != 'paid'
+          && isValidInvoice(incoming(), userId, invoiceId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            // Action: Mark paid / update status
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'amountPaid', 'outstandingBalance', 'updatedAt'])
+            ||
+            // Action: Edit invoice details
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'number', 'date', 'dueDate', 'paymentTerms',
+              'clientName', 'clientEmail', 'clientPhone', 'clientAddress',
+              'status', 'total', 'amountPaid', 'outstandingBalance',
+              'notes', 'appliedTaxId', 'taxTotal', 'items', 'updatedAt'
+            ])
+          )
+          && parentUserExists(userId);
+        allow delete: if isValidId(userId) && isValidId(invoiceId) && isVerifiedUser() && isOwner(userId);
+      }
+
+      // Products (Inventory)
+      match /products/{productId} {
+        allow get: if isValidId(userId) && isValidId(productId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(productId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidProduct(incoming(), userId, productId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isValidId(userId)
+          && isValidId(productId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidProduct(incoming(), userId, productId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'price', 'updatedAt'])
+          && parentUserExists(userId);
+        allow delete: if isValidId(userId) && isValidId(productId) && isVerifiedUser() && isOwner(userId);
+      }
+
+      // Clients
+      match /clients/{clientId} {
+        allow get: if isValidId(userId) && isValidId(clientId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(clientId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidClient(incoming(), userId, clientId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isValidId(userId)
+          && isValidId(clientId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidClient(incoming(), userId, clientId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'phone', 'address', 'updatedAt'])
+          && parentUserExists(userId);
+        allow delete: if isValidId(userId) && isValidId(clientId) && isVerifiedUser() && isOwner(userId);
+      }
+    }
+  }
+}
